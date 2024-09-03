@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.hahnentt.external</groupId>
+  <artifactId>sonar-ws-osgi</artifactId>
+  <version>9.9.6.92038</version>
+
+  <name>SonarQube Web Service OSGi</name>
+  <description>OSGi bundle for the SonarQube Web Service artifact</description>
+
+  <developers>
+    <developer>
+      <id>thahnen</id>
+      <name>Tobias Hahnen</name>
+      <organization>HahnenTT</organization>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:https://github.com/thahnen/sonar-ws-osgi.git</connection>
+    <developerConnection>scm:git:git@github.com:thahnen/sonar-ws-osgi.git</developerConnection>
+    <url>https://github.com/thahnen/sonar-ws-osgi</url>
+    <tag>HEAD</tag>
+  </scm>
+
+  <properties>
+    <!-- Used for generating the META-INF/MANIFEST.MF -->
+    <version.bnd.plugin>7.0.0</version.bnd.plugin>
+
+    <!-- Used for shading, creates "sources" jar but with incorrect META-INF/MANIFEST.MF! -->
+    <version.shade.plugin>3.6.0</version.shade.plugin>
+
+    <!-- Used for patching the META-INF/MANIFEST.MF of the "sources" jar -->
+    <version.exec.plugin>3.4.1</version.exec.plugin>
+
+    <!-- Used for the dependency that is provided to the Maven Shade plug-in -->
+    <version.sonarlint-core>10.5.0.78949</version.sonarlint-core>
+  </properties>
+
+  <dependencies>
+    <!--
+      For now all the transitive dependencies will be added to "Import-Package"! We might need to
+      shade them at some point as well, for now what is required can be seen when the project is
+      built, indicated by "[INFO] Excluding <transitive dependency>".
+
+      Check at Maven Central for the artifact which dependencies are ACTUAL runtime dependencies!
+    -->
+    <dependency>
+      <groupId>org.sonarsource.sonarqube</groupId>
+      <artifactId>sonar-ws</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>biz.aQute.bnd</groupId>
+          <artifactId>bnd-maven-plugin</artifactId>
+          <version>${version.bnd.plugin}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-shade-plugin</artifactId>
+          <version>${version.shade.plugin}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>exec-maven-plugin</artifactId>
+          <version>${version.exec.plugin}</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
+    <plugins>
+      <plugin>
+        <groupId>biz.aQute.bnd</groupId>
+        <artifactId>bnd-maven-plugin</artifactId>
+        <extensions>true</extensions>
+        <executions>
+          <!-- Used to create the META-INF/MANIFEST.MF for the OSGi "normal" JAR archive -->
+          <execution>
+            <id>prepare-normal-MANIFEST.MF</id>
+            <goals>
+              <goal>bnd-process</goal>
+            </goals>
+            <configuration>
+              <bndfile>${project.basedir}/sonar-ws-osgi.bnd</bndfile>
+              <manifestPath>${project.basedir}/target/normal-MANIFEST.MF</manifestPath>
+            </configuration>
+          </execution>
+
+          <!-- Used to create the META-INF/MANIFEST.MF for the OSGi "sources" JAR archive -->
+          <execution>
+            <id>prepare-sources-MANIFEST.MF</id>
+            <goals>
+              <goal>bnd-process</goal>
+            </goals>
+            <configuration>
+              <bndfile>${project.basedir}/sonar-ws-osgi-sources.bnd</bndfile>
+              <manifestPath>${project.basedir}/target/META-INF/MANIFEST.MF</manifestPath>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <dependencies>
+          <dependency>
+            <groupId>org.sonarsource.sonarlint.core</groupId>
+            <artifactId>maven-shade-ext-bnd-transformer</artifactId>
+            <version>${version.sonarlint-core}</version>
+          </dependency>
+        </dependencies>
+        <executions>
+          <execution>
+            <id>shade</id>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <createDependencyReducedPom>true</createDependencyReducedPom>
+          <minimizeJar>true</minimizeJar>
+          <createSourcesJar>true</createSourcesJar>
+
+          <!--
+            We have to use our own custom transformer as the Maven Shade and Bndtools plug-in
+            collide on META-INF/MANIFEST.MF files. This won't work for the "sources" jar as none of
+            the dependencies contain the required manifest entries in their "sources" jar!
+          -->
+          <transformers>
+            <transformer implementation="org.sonarsource.sonarlint.maven.shade.ext.ManifestBndTransformer">
+              <normalJarManifestPath>${project.basedir}/target/normal-MANIFEST.MF</normalJarManifestPath>
+            </transformer>
+          </transformers>
+
+          <!-- The dependencies we actually want to shade (currently without transitive ones)! -->
+          <artifactSet>
+            <includes>
+              <include>org.sonarsource.sonarqube:sonar-ws</include>
+            </includes>
+          </artifactSet>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <!-- Used to replace the "sources" jar META-INF/MANIFEST.MF, no working with shading! -->
+        <executions>
+          <execution>
+            <id>patch-sources-MANIFEST.MF</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>sonar-ws-osgi-sources.sh</executable>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

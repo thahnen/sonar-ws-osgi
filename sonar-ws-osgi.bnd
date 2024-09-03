@@ -1,0 +1,7 @@
+# Include BND settings used for normal / sources JAR archives
+-include: shared.bnd
+
+# Manifest entries to configure the OSGi attributes for the normal JAR archive
+Bundle-SymbolicName: ${project.groupId}.${project.artifactId}
+Export-Package: org.sonarqube.ws.*;version="${project.version}";-noimport:=true,
+Import-Package: *;resolution:=optional
