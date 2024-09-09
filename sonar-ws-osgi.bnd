@@ -4,4 +4,13 @@
 # Manifest entries to configure the OSGi attributes for the normal JAR archive
 Bundle-SymbolicName: ${project.groupId}.${project.artifactId}
 Export-Package: org.sonarqube.ws.*;version="${project.version}";-noimport:=true,
-Import-Package: *;resolution:=optional
+Import-Package: javax.annotation.*;resolution:=optional,
+
+# BND configuration to include specific dependencies inside the JAR archive
+# INFO: The `sonar-ws-osgi-sources.jar` won't include sources of these
+#       dependencies - a limitation of BND!
+-includeresource: lib/sonar-plugin-api.jar=sonar-plugin-api-*.jar;lib:=true,\
+  lib/protobuf-java.jar=protobuf-java-*.jar;lib:=true,\
+  lib/gson.jar=gson-*.jar;lib:=true,\
+  lib/okhttp.jar=okhttp-*.jar;lib:=true,\
+  lib/okio-jvm.jar=okio-jvm-*.jar;lib:=true

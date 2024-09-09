@@ -42,11 +42,11 @@
 
   <dependencies>
     <!--
-      For now all the transitive dependencies will be added to "Import-Package"! We might need to
-      shade them at some point as well, for now what is required can be seen when the project is
-      built, indicated by "[INFO] Excluding <transitive dependency>".
+      All the transitive dependencies are added to the artifact via OSGi measures and not via the
+      Maven Shade plug-in in order to not unpack all the files.
 
-      Check at Maven Central for the artifact which dependencies are ACTUAL runtime dependencies!
+      Maybe the manifest header elements need to tweaked to export required packages from the
+      included dependencies!
     -->
     <dependency>
       <groupId>org.sonarsource.sonarqube</groupId>
@@ -155,7 +155,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
-        <!-- Used to replace the "sources" jar META-INF/MANIFEST.MF, no working with shading! -->
+        <!-- Used to replace the "sources" jar META-INF/MANIFEST.MF, not working with shading! -->
         <executions>
           <execution>
             <id>patch-sources-MANIFEST.MF</id>
