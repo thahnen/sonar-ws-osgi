@@ -28,7 +28,7 @@
 
   <properties>
     <!-- Used for generating the META-INF/MANIFEST.MF -->
-    <version.bnd.plugin>7.0.0</version.bnd.plugin>
+    <version.bnd.plugin>7.1.0</version.bnd.plugin>
 
     <!-- Used for shading, creates "sources" jar but with incorrect META-INF/MANIFEST.MF! -->
     <version.shade.plugin>3.6.0</version.shade.plugin>
@@ -37,7 +37,7 @@
     <version.exec.plugin>3.5.0</version.exec.plugin>
 
     <!-- Used for the dependency that is provided to the Maven Shade plug-in -->
-    <version.sonarlint-core>10.9.0.79478</version.sonarlint-core>
+    <version.sonarlint-core>10.11.0.79687</version.sonarlint-core>
   </properties>
 
   <dependencies>
