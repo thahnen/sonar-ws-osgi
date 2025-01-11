@@ -37,7 +37,7 @@
     <version.exec.plugin>3.5.0</version.exec.plugin>
 
     <!-- Used for the dependency that is provided to the Maven Shade plug-in -->
-    <version.sonarlint-core>10.11.0.79687</version.sonarlint-core>
+    <version.sonarlint-core>10.12.1.79852</version.sonarlint-core>
   </properties>
 
   <dependencies>
